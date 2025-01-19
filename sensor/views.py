@@ -1,8 +1,10 @@
 """Sensor data views."""
 
 import base64
+import binascii
 import json
 
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.http import Http404
 from rest_framework import status
@@ -37,7 +39,6 @@ class SensorRecordView(APIView):
                 "utf-8"
             )
             sensor_data = json.loads(decoded_data)
-
             serializer = SensorRecordSerializer(
                 data={
                     "sensor_id": sensor_data["v0"],
@@ -66,6 +67,11 @@ class SensorRecordView(APIView):
         except json.JSONDecodeError as e:
             return Response(
                 {"error": f"Invalid JSON data: {e}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except binascii.Error as e:
+            return Response(
+                {"error": f"Invalid base64-encoded string: {e}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
@@ -119,6 +125,10 @@ class SensorRecordView(APIView):
             )
 
         except ValueError as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_400_BAD_REQUEST
+            )
+        except ValidationError as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_400_BAD_REQUEST
             )
