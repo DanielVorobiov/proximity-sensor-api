@@ -1,0 +1,32 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings
+      - DB_HOST=db
+      - DB_NAME=sensordb
+      - DB_USER=sensoruser
+      - DB_PASS=sensorpassword
+    command: >
+      sh -c " python manage.py makemigrations &&
+              python manage.py migrate &&
+              python manage.py runserver 0.0.0.0:8000"
+
+
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=sensordb
+      - POSTGRES_USER=sensoruser
+      - POSTGRES_PASSWORD=sensorpassword
+    volumes:
+      - dev-db-data:/var/lib/postgresql/data/
+
+volumes:
+  dev-db-data:
