@@ -1,8 +1,8 @@
 import base64
 import json
 
-from google.cloud import pubsub_v1
 from celery import shared_task
+from google.cloud import pubsub_v1
 
 from core.constants import PROJECT_ID, SUBSCRIPTION_ID
 from sensor.serializers import SensorRecordSerializer
@@ -10,10 +10,11 @@ from sensor.serializers import SensorRecordSerializer
 subscriber = pubsub_v1.SubscriberClient()
 subscription_path = subscriber.subscription_path(PROJECT_ID, SUBSCRIPTION_ID)
 
+
 @shared_task
 def process_sensor_data(message):
     try:
-        data = json.loads(message.data.decode('utf-8'))
+        data = json.loads(message.data.decode("utf-8"))
         decoded_data = base64.b64decode(data["message"]["data"]).decode(
             "utf-8"
         )
@@ -34,13 +35,15 @@ def process_sensor_data(message):
             print(f"Invalid data: {serializer.errors}")
             message.nack()
 
-
     except Exception as e:
         print(f"Error processing message: {e}")
         message.nack()
 
+
 def start_subscriber():
-    streaming_pull = subscriber.subscribe(subscription_path, callback=process_sensor_data)
+    streaming_pull = subscriber.subscribe(
+        subscription_path, callback=process_sensor_data
+    )
     print(f"Started subscribing to {subscription_path}")
 
     with subscriber:
