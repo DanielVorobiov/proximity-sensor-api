@@ -7,9 +7,13 @@ import json
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.http import Http404
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from core.constants import DEFAULT_SWAGGER_DATA_VALUE
 
 from .models import SensorRecord
 from .serializers import SensorRecordSerializer
@@ -22,6 +26,36 @@ class SensorRecordView(APIView):
     data.
     """
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "message": openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "attributes": openapi.Schema(type=openapi.TYPE_OBJECT),
+                        "data": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            default=DEFAULT_SWAGGER_DATA_VALUE,
+                        ),
+                        "messageId": openapi.Schema(type=openapi.TYPE_STRING),
+                        "message_id": openapi.Schema(type=openapi.TYPE_STRING),
+                        "publishTime": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            format=openapi.FORMAT_DATETIME,
+                        ),
+                        "publish_time": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            format=openapi.FORMAT_DATETIME,
+                        ),
+                    },
+                    required=["data"],
+                ),
+                "subscription": openapi.Schema(type=openapi.TYPE_STRING),
+            },
+            required=["message"],
+        ),
+    )
     def post(self, request):
         """Create new sensor data records.
 
@@ -42,12 +76,11 @@ class SensorRecordView(APIView):
             serializer = SensorRecordSerializer(
                 data={
                     "sensor_id": sensor_data["v0"],
-                    "human_presence": sensor_data["v11"],
+                    "human_presence": bool(sensor_data["v11"]),
                     "dwell_time": sensor_data["v18"],
                     "timestamp": sensor_data["Time"],
                 }
             )
-
             if serializer.is_valid():
                 # validated_data.append(serializer.validated_data)
                 serializer.save()
