@@ -73,6 +73,7 @@ class SensorRecordView(APIView):
                 "utf-8"
             )
             sensor_data = json.loads(decoded_data)
+
             serializer = SensorRecordSerializer(
                 data={
                     "sensor_id": sensor_data["v0"],
